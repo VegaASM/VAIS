@@ -14,7 +14,7 @@ more_menus_print_title:
 adr x0, more_menus_msg
 bl puts
 
-/*Idle and grab keys*/
+/*Idle and read keyboard*/
 more_menus_idle_loop:
 bl keyboard_input
 cbz w0, -4

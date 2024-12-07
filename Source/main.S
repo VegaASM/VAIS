@@ -1,7 +1,6 @@
-/*NOTE : QEMU doesn't display printf immediately is there's no newline at every end, we have to call fflush(stdout). to prevent this, we MUST end printf with ENTER/newlinefeed
-Therefore we call puts when we have no format specifiers*/
+/*NOTE : QEMU doesn't display printf immediately is the string doesnt end in a newline (0xA). For strings without format specifiers, we can use puts*/
 
-/*NOTE all bfc instructions are replaced with and equivalents so devices running on 8.0 and 8.1 can still run VAIS*/
+/*NOTE all bfc instructions are replaced with "and" equivalents so devices running on 8.0 and 8.1 can still run VAIS*/
 
 #include "Directives/general.S"
 #include "Directives/ascii.S"
@@ -29,9 +28,9 @@ Therefore we call puts when we have no format specifiers*/
 
 #include "Home/Char/remove_all_spaces.S"
 
-main_menu_msg: /*Hides the cursor as well for rest of time til program powers off*/
-.asciz "\x1B[2J\x1B[H\x1B[?25lWelcome to VAIS! (v0.4.1)\nCurrent Login: %s\n\n1. Start New Inventory\n2. Continue Inventory\n3. Finalize Inventory\n4. Settings\n5. Power Off\n"
-poweroff_msg:
+main_menu_msg: /*Hides the cursor for rest of time til program powers off*/
+.asciz "\x1B[2J\x1B[H\x1B[?25lWelcome to VAIS! (v0.4.2)\nCurrent Login: %s\n\n1. Start New Inventory\n2. Continue Inventory\n3. Finalize Inventory\n4. Settings\n5. Power Off\n"
+poweroff_msg: /*Restores cursor*/
 .asciz "\x1B[2J\x1B[H\x1B[?25hVAIS has been powered off."
 
 func_table:
@@ -59,16 +58,16 @@ mov recordnum, 0
 str xzr, [masterptr, in_editmode_flag]
 
 /*Set finalize flag high because we dont need any checks for poweroff if an inventory wasn't even started*/
-mov x0, 1
+mov w0, 1
 str x0, [masterptr, finalizeflag]
 
 /*Change the terminal to semi-raw*/
 bl set_new_term_and_save_old
 
-/*NEW NOTE set terminal to reset at exit*/
+/*Set terminal to reset at exit. Works but exits from a segementation fault*/
 /*bl make_at_exit*/
 
-/*Dump inventory.bin*/
+/*Dump inventory.bin into memory*/
 bl dump_inventory_bin
 cbnz x0, dump_invbin_error_occurred
 
@@ -76,21 +75,8 @@ cbnz x0, dump_invbin_error_occurred
 add x0, masterptr, serialnum
 bl time
 
-/*Check if Login starts with NULL byte, if so use default login*/
-ldrb w0, [invbin_ptr, login]
-cbz w0, use_default_login
-b call_printf_for_login_creds
-
-/*Set Login to Default (USER001)*/
-use_default_login:
-movz x0, 0x0031, lsl 48 //little endian...
-movk x0, 0x3030, lsl 32
-movk x0, 0x5245, lsl 16
-movk x0, 0x5355
-str x0, [invbin_ptr, login]
-
 /*Clear the screen, reset cursor position, hide the cursor, Print the Login*/
-call_printf_for_login_creds:
+printf_main_menu:
 add x1, invbin_ptr, login
 adr x0, main_menu_msg
 bl printf
@@ -102,20 +88,21 @@ cbz w0, -4
 ldrb w0, [masterptr, keyboard_buffer]
 /*Based on index call func*/
 cmp w0, ascii_1
-blo 0xC
+blo main_menu_beep
 cmp w0, ascii_5
-bls 0xC
+bls main_calc_func_to_call
+main_menu_beep:
 bl beep
 b main_poll_loop
 /*based on number enter, grab func from func table and call it*/
-and w0, w0, 0x0000000F /*change ascii to int*/
-sub w0, w0, 1 /*change int to index number*/
+main_calc_func_to_call:
+sub w0, w0, ascii_1 /*change ascii to int to index number*/
 lsl w0, w0, 3 /*multiply index by 8 to get func addr within table to load*/
 adr x1, func_table
 ldr x0, [x1, x0]
 blr x0
 /*If zero returned go back to main idle, if not zero, end program*/
-cbz w0, call_printf_for_login_creds
+cbz w0, printf_main_menu
 
 /*Set standard "power off" msg to print in OG terminal after alt buffer is shutdown*/
 adr x19, poweroff_msg
@@ -132,7 +119,7 @@ bl puts
 mov w0, 0
 epilogue 10, 0x150
 
-/*Backup msg to print since an error occurred on inv.bin, we need msg to be printed in main terminal, not alt buffer*/
+/*Backup msg to print since an error occurred on inv.bin*/
 dump_invbin_error_occurred:
 mov x19, x0
 b restore_termios_struct

@@ -34,12 +34,8 @@ mov w1, (ECHO | ICANON)
 bic w0, w0, w1 /*And w/ complement to remove the 2 bits*/
 str w0, [masterptr, alt_term_struct + lflag]
 
-/*Set VMIN and VTIME to 0 TODO research if I need this!*/
+/*Set VMIN and VTIME to 0, TODO research if I need this!*/
 strh wzr, [masterptr, alt_term_struct + VTIME]
-
-/*Set alt term struct contents to mimic raw terminal*/
-/*mov x0, x8
-bl cfmakeraw*/
 
 /*Now apply the new (alt) terminal!*/
 mov w0, stdin
@@ -51,7 +47,7 @@ bl tcsetattr
 epilogue 1, 8
 
 
-
+/*Below is unused*/
 .globl make_at_exit
 make_at_exit:
 prologue 0, 0
@@ -65,4 +61,3 @@ mov w0, stdin
 mov w1, TCSANOW
 add x2, masterptr, og_term_struct
 b tcsetattr
-

@@ -24,7 +24,7 @@ ldr x12, [masterptr, enddataentry_ptr]
 NOTE should we just use record number 131,072????*/
 check_room_for_new_entries:
 cmp curdataentry_ptr, x12
-bhi out_of_memory  //todo do the we REALLy are out of memory
+bhi out_of_memory  /*TODO do the we REALLy are out of memory by reusing deleted entries*/
 /*Check if we are in edit mode*/
 cbnz x19, proceed_to_write_entry_go_pass_arealoccat
 /*Check if inventory entry within databin/malloc buffer is invalid (deleted) to know if we can use it ofc*/

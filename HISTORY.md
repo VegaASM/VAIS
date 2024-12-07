@@ -6,6 +6,9 @@ This does NOT include any revisions.
 
 ---
 
+**Version 0.4.2**
+* Fixed some awkward navigation in regards to Edit Mode and Change Mode
+
 **Version 0.4.1**
 * All records now have a time stamp
 

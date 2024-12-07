@@ -3,16 +3,16 @@
 #include "GC_Specific/gc_change_cat.S"
 
 global_change_main_msg:
-.asciz "\x1B[2J\x1B[HChange Mode\n\n1. Delete Area %s\n2. Delete Loc %s\n3. Delete Cat %s\n4. Change Area %s\n5. Change Loc %s\n6. Change Cat %s\nESC. Exit Change Mode\nNOTE: Loc and Cat actions are localized only!\n"
+.asciz "\x1B[2J\x1B[HCHANGE MODE\n\n1. Delete Area %s\n2. Delete Loc %s\n3. Delete Cat %s\n4. Change Area %s\n5. Change Loc %s\n6. Change Cat %s\nESC. Exit Change Mode\nNOTE: Loc and Cat actions are localized only!\n"
 gc_are_you_sure_msg:
-.asciz "\x1B[2J\x1B[HAre you sure?\n7. Yes\n8/ESC. No, abort."
+.asciz "\x1B[2J\x1B[HAre you sure?\n\n7. Yes\n8/ESC. No, abort."
 gc_task_completed_msg:
-.asciz "\x1B[2J\x1B[HTask completed! Press any key to exit."
+.asciz "\x1B[2J\x1B[HTask completed!\n\nPress any key to exit out of Change Mode."
 gc_please_wait_msg:
 .asciz "\x1B[2J\x1B[HPlease wait..."
 
 change_mode_disabled_msg:
-.asciz "\x1B[2J\x1B[HNothing to change or delete! No records!\nPress any key to exit."
+.asciz "\x1B[2J\x1B[HNothing to change or delete! No records!\nPress any key to exit out of Change Mode."
 
 gc_sub_func_table:
 .xword gc_delete_area
@@ -30,7 +30,7 @@ change_mode:
 prologue 1, 8
 
 /*Set edit mode flag high*/
-mov x0, 1
+mov w0, 1
 str x0, [masterptr, in_editmode_flag]
 
 /*See if we even have records to change*/
@@ -65,7 +65,7 @@ do_gc_beep_from_gc_main:
 bl beep
 b global_change_main_idle_loop
 
-/*DO are you sure?*/
+/*Do are you sure?*/
 do_gc_are_you_sure:
 adr x0, gc_are_you_sure_msg
 bl puts
@@ -74,7 +74,7 @@ bl keyboard_input
 cbz w0, -4
 ldrb w0, [masterptr, keyboard_buffer]
 cmp w0, ESC
-beq global_change_main_epilogue
+beq global_change_start
 cmp w0, ascii_8
 beq global_change_start
 cmp w0, ascii_7
@@ -94,7 +94,7 @@ ldr x0, [x1, x0]
 blr x0
 
 /*Task completed or aborted, loop in idle til key hit*/
-cbnz w0, global_change_main_epilogue
+cbnz w0, global_change_start /*Take this branch if task aborted*/
 adr x0, gc_task_completed_msg
 bl puts
 bl keyboard_input
@@ -102,7 +102,6 @@ cbz w0, -4
 global_change_main_epilogue:
 /*Set edit mode flag low*/
 str xzr, [masterptr, in_editmode_flag]
-mov w0, 0 //todo some return code for now...
 epilogue 1, 8
 
 //===============================
@@ -114,20 +113,20 @@ prologue 2, 0
 /*Tell user to wait*/
 adr x0, gc_please_wait_msg
 bl puts
-/*Grab data/malloc ptr*/
+/*Grab data aka malloc ptr*/
 mov x19, dataentry_ptr
-//Get entries amt for loop
+/*Get entries amt for loop*/
 mov x20, entriesamt
-//Load flag value, if invalid (deleted), check next entry
+/*Load flag value, if invalid (deleted), check next entry*/
 gc_delete_area_loop:
 ldrb w4, [x19, d_vflag]
 ldr x1, [invbin_ptr, area]
 cbz w4, gc_delete_area_incr_addr
-//Valid entry found, is area matched with inv.bin?
+/*Valid entry found, is area matched with inv.bin?*/
 ldr x2, [x19, d_area]
 cmp x1, x2
 bne gc_delete_area_incr_addr
-//Delete dat shit
+/*Delete dat shit*/
 mov w4, 0
 strb w4, [x19, d_vflag]
 mov x0, x19
@@ -136,6 +135,7 @@ gc_delete_area_incr_addr:
 add x19, x19, databin_entry_size
 subs x20, x20, 1
 bne gc_delete_area_loop
+mov w0, 0
 epilogue 2, 0
 
 //===============================
@@ -145,25 +145,25 @@ prologue 2, 0
 /*Tell user to wait*/
 adr x0, gc_please_wait_msg
 bl puts
-/*Grab data/malloc ptr*/
+/*Grab data aka malloc ptr*/
 mov x19, dataentry_ptr
-//Get entries amt for loop
+/*Get entries amt for loop*/
 mov x20, entriesamt
-//Load flag value, if invalid (deleted), check next entry
+/*Load flag value, if invalid (deleted), check next entry*/
 gc_delete_loc_loop:
 ldrb w4, [x19, d_vflag]
 ldr x1, [invbin_ptr, area]
 ldr x5, [invbin_ptr, loc]
 cbz w4, gc_delete_loc_incr_addr
-//Valid entry found, is area matched with inv.bin?
+/*Valid entry found, is area matched with inv.bin?*/
 ldr x2, [x19, d_area]
 cmp x1, x2
 bne gc_delete_loc_incr_addr
-//Good now is loc matched with inv.bin?
+/*Good now is loc matched with inv.bin?*/
 ldr x2, [x19, d_loc]
 cmp x5, x2
 bne gc_delete_loc_incr_addr
-//Delete dat shit
+/*Delete dat shit*/
 mov w4, 0
 strb w4, [x19, d_vflag]
 mov x0, x19
@@ -172,6 +172,7 @@ gc_delete_loc_incr_addr:
 add x19, x19, databin_entry_size
 subs x20, x20, 1
 bne gc_delete_loc_loop
+mov w0, 0
 epilogue 2, 0
 
 //===============================
@@ -181,30 +182,30 @@ prologue 2, 0
 /*Tell user to wait*/
 adr x0, gc_please_wait_msg
 bl puts
-/*Grab data/malloc ptr*/
+/*Grab data aka malloc ptr*/
 mov x19, dataentry_ptr
-//Get entries amt for loop
+/*Get entries amt for loop*/
 mov x20, entriesamt
-//Load flag value, if invalid (deleted), check next entry
+/*Load flag value, if invalid (deleted), check next entry*/
 gc_delete_cat_loop:
 ldrb w4, [x19, d_vflag]
 ldr x1, [invbin_ptr, area]
 ldr x5, [invbin_ptr, loc]
 ldr x6, [invbin_ptr, cat]
 cbz w4, gc_delete_cat_incr_addr
-//Valid entry found, is area matched with inv.bin?
+/*Valid entry found, is area matched with inv.bin?*/
 ldr x2, [x19, d_area]
 cmp x1, x2
 bne gc_delete_cat_incr_addr
-//Good now is loc matched with inv.bin?
+/*Good now is loc matched with inv.bin?*/
 ldr x2, [x19, d_loc]
 cmp x5, x2
 bne gc_delete_cat_incr_addr
-//Good now is cat matched too?
+/*Good now is cat matched too?*/
 ldr x2, [x19, d_cat]
 cmp x6, x2
 bne gc_delete_cat_incr_addr
-//Delete dat shit
+/*Delete dat shit*/
 mov w4, 0
 strb w4, [x19, d_vflag]
 mov x0, x19
@@ -213,6 +214,7 @@ gc_delete_cat_incr_addr:
 add x19, x19, databin_entry_size
 subs x20, x20, 1
 bne gc_delete_cat_loop
+mov w0, 0
 epilogue 2, 0
 
 //===============================

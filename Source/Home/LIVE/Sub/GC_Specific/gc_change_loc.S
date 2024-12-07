@@ -84,18 +84,26 @@ bne gc_change_loc_incr_addr
 str x22, [x19, d_loc]
 mov x0, x19
 bl write_csv_line
-/*Do next entry, decremetn loop*/
+/*Do next entry, decrement loop*/
 gc_change_loc_incr_addr:
 add x19, x19, databin_entry_size
 subs x20, x20, 1
 bne gc_change_loc_loop
-/*if and only if new loc matches loc in qestion, Write new loc to inv.bin*/
+/*if and only if new loc matches loc in question, Write new loc to inv.bin*/
 adr x0, gc_enter_loc_end_msg-9
 add x1, invbin_ptr, loc
 ldrb w2, [x0], 1
 strb w2, [x1], 1
 subs w21, w21, 1
 bne -0xC
+
+/*Reset field with spaces, causes buffer issues with printf TODO fix*/
+/*adr x0, gc_enter_loc_end_msg-9
+movz w1, 0x2020
+str w1, [x0]
+strh w1, [x0, 4]
+strb w1, [x0, 6]*/
+mov w0, 0
 gc_change_loc_epi:
 epilogue 4, 0
 

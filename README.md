@@ -2,7 +2,7 @@
 
 Author: Vega
 
-Version: v0.4.1
+Version: v0.4.2
 
 This document is an overview of VAIS and of other documents present in this directory.
 

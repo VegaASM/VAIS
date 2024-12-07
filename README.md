@@ -35,6 +35,8 @@ Yes, it needs Termux's Version 119.0 ARM64 APK installed. A simple Google search
 
 Most external numberpads (that are at least of the 21-key type) will work. Only caveat is that you must physically swap the ENTER and + buttons. See NUMPAD.md for more details.
 
+---
+
 **What kind of inventories can VAIS perform?**
 
 For now, only plain jane financial inventories (manually enter price then manually enter quantity).

@@ -1,0 +1,79 @@
+/*ASCII symbols, some are unused*/
+.set ESC, 0x1B
+.set ascii_space, 0x20
+.set ascii_tab, 0x9
+.set ascii_enter, 0xA
+.set ascii_carriage, 0xD
+.set ascii_mulli, 0x2A /*aka ascii_asterisk, aka ascii_times*/
+.set ascii_plus, 0x2B /*aka ascii_add*/
+.set ascii_comma, 0x2C
+.set ascii_dash, 0x2D /*aka ascii_subtract*/
+.set ascii_dot, 0x2E
+.set ascii_slash, 0x2F /*aka ascii_divide*/
+.set ascii_colon, 0x3A
+.set ascii_lessthan, 0x3C
+.set ascii_0, 0x30
+.set ascii_1, 0x31
+.set ascii_2, 0x32
+.set ascii_3, 0x33
+.set ascii_4, 0x34
+.set ascii_5, 0x35
+.set ascii_6, 0x36
+.set ascii_7, 0x37
+.set ascii_8, 0x38
+.set ascii_9, 0x39
+.set DELETE, 0x7F
+
+.set ascii_A, 0x41
+.set ascii_B, 0x42
+.set ascii_C, 0x43
+.set ascii_D, 0x44
+.set ascii_E, 0x45
+.set ascii_F, 0x46
+.set ascii_G, 0x47
+.set ascii_H, 0x48
+.set ascii_I, 0x49
+.set ascii_J, 0x4A
+.set ascii_K, 0x4B
+.set ascii_L, 0x4C
+.set ascii_M, 0x4D
+.set ascii_N, 0x4E
+.set ascii_O, 0x4F
+.set ascii_P, 0x50
+.set ascii_Q, 0x51
+.set ascii_R, 0x52
+.set ascii_S, 0x53
+.set ascii_T, 0x54
+.set ascii_U, 0x55
+.set ascii_V, 0x56
+.set ascii_W, 0x57
+.set ascii_X, 0x58
+.set ascii_Y, 0x59
+.set ascii_Z, 0x5A
+
+.set ascii_a, 0x61
+.set ascii_b, 0x62
+.set ascii_c, 0x63
+.set ascii_d, 0x64
+.set ascii_e, 0x65
+.set ascii_f, 0x66
+.set ascii_g, 0x67
+.set ascii_h, 0x68
+.set ascii_i, 0x69
+.set ascii_j, 0x6A
+.set ascii_k, 0x6B
+.set ascii_l, 0x6C
+.set ascii_m, 0x6D
+.set ascii_n, 0x6E
+.set ascii_o, 0x6F
+.set ascii_p, 0x70
+.set ascii_q, 0x71
+.set ascii_r, 0x72
+.set ascii_s, 0x73
+.set ascii_t, 0x74
+.set ascii_u, 0x75
+.set ascii_v, 0x76
+.set ascii_w, 0x77
+.set ascii_x, 0x78
+.set ascii_y, 0x79
+.set ascii_z, 0x7A

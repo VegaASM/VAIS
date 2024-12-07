@@ -1,0 +1,34 @@
+
+TAB price field actions
+_ = BEEP, no move cursor
+5 = move cursor and dubarrows to qty field
+
+TAB qty field actions
+_ = write 1, write entry, clear price & qty fields, move cursor & dubarrows to price field
+5 = write entry , clear price & qty fields, move cursor & dubarrows to price field
+5+ = write entry, clear price & qty fields, move cursor & dubarrows to price field
+5* = write entry, clear price & qty fields, move cursor & dubarrows to price field
+5+1499 = write 5, remove +, place 1499 in price field, cursor and dub arrows to price field, CLEAR QTY
+00000005*1499 = same as above but remove * ofc, cursor and dub arrows to price field CLEAR QTY
+nospace = no move cursor, beep
+
+SYMBOL price field actions:
+ANY = beep
+
+SYMBOL qty field actions
+NOTE ~ = symbol in question
+_ = beep
+5 = append ~, check for space too
+5~ = beep
+5+1499 = place 1504~ into field
+5*1499 = place 7495~ into field
+5/1499 = place 0.XXX~ into field
+5-1499 = place -XXXX~ into field
+
+
+
+
+
+
+
+

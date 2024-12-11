@@ -9,6 +9,8 @@ Returns 0 or halts with error message*/
 delete_csv_line:
 /*Prologue*/
 prologue 1, 0x18
+/*Save Arg*/
+mov x19, x0
 /*Close file since its in append mode*/
 ldrb w0, [masterptr, fdstorespot]
 bl close
@@ -19,7 +21,7 @@ add x0, masterptr, csvfilename
 bl open
 tbnz w0, 31, deletecsv_internal_open_error_one
 strb w0, [masterptr, fdstorespot]
-/*Use record num selected/chosen in edit mode to seek to shit*/
+/*Use edit mode's currdata_entry ptr to grab the record num selected/chosen in edit mode to seek to shit*/
 mov w5, csv_header_size
 ldr x6, [x19, d_record]
 sub x6, x6, 1

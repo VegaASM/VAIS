@@ -1,38 +1,23 @@
-/*
-Args:
-Void
+/*Args: Void
 Return Values:
-w0 always = 0; tell main to idle (don't power off)*/
+w0 always returns 0; tell main to idle (don't power off)*/
 
 #include "LIVE/live_inventory.S"
 #include "Char/char_nav.S"
 #include "Char/is_banned_area_loc.S"
 
-invalid_area_loc_flags_msg:
-.asciz "\x1B[2J\x1B[HError! Both Area and Location are disabled. This is impossible to be implemented within Settings. Inventory.bin file was manually modified. Please note that this CAN be fixed thru Settings. Press any key to return to Main Menu. Once at Main Menu, go to Settings, then go to 'Fix Inventory.bin'."
-invalid_area_width_msg:
-.asciz "\x1B[2J\x1B[HError! Area has an applied invalid width. This is impossible to be implemented within Settings. Inventory.bin file was manually modified. Please note that this CAN be fixed thru Settings. Press any key to return to Main Menu. Once at Main Menu, go to Settings, then go to 'Fix Inventory.bin'."
-invalid_loc_width_msg:
-.asciz "\x1B[2J\x1B[HError! Location has an applied invalid width. This is impossible to be implemented within Settings. Inventory.bin file was manually modified. Please note that this CAN be fixed thru Settings. Press any key to return to Main Menu. Once at Main Menu, go to Settings, then go to 'Fix Inventory.bin'."
-invalid_cat_width_msg:
-.asciz "\x1B[2J\x1B[HError! Category has an applied invalid width. This is impossible to be implemented within Settings. Inventory.bin file was manually modified. Please note that this CAN be fixed thru Settings. Press any key to return to Main Menu. Once at Main Menu, go to Settings, then go to 'Fix Inventory.bin'."
-invalid_maxmin_price_msg:
-.asciz "\x1B[2J\x1B[HError! Max Price is lower than Min Price. Press any key to return to Main Menu. Go to settings and fix the max and/or min price(s)."
-invalid_maxmin_qty_msg:
-.asciz "\x1B[2J\x1B[HError! Max Qty is lower than Min Qty. Press any key to return to Main Menu. Go to settings and fix the max and/or min qty(s)."
-
 cont_int_inv_flag_high_msg:
 .asciz "\x1B[2J\x1B[HNOTICE!\nInventory has not been started, or you have finalized the inventory.\nPress any key to go back to Main Menu."
 
-.data //need these strings writable
+.data
 area_msg:
-.asciz "\x1B[2J\x1B[HArea:        " //8 spaces, 1 for whitespace, 7 for area chars
+.asciz "\x1B[2J\x1B[HArea:        " /*8 spaces, 1 for whitespace, 7 for area chars*/
 loc_msg:
-.asciz "\x1B[2J\x1B[HLoc:        " //8 spaces, 1 for whitespace, 7 for loc chars
+.asciz "\x1B[2J\x1B[HLoc:        " /*8 spaces, 1 for whitespace, 7 for loc chars*/
 cat_msg:
-.asciz "\x1B[2J\x1B[HCat:        " //8 spaces, 1 for whitespace, 7 for cat chars
+.asciz "\x1B[2J\x1B[HCat:        " /*8 spaces, 1 for whitespace, 7 for cat chars*/
 end_of_cat_msg:
-.text //must come BEFORE align
+.text
 
 .align 6
 
@@ -53,25 +38,8 @@ bl keyboard_input
 cbz w0, -4
 b continue_inventory_epilogue
 
-/*An Area or Location HAS to be enabled*/
 __start_cont_inv:
-ldrb w0, [invbin_ptr, arealoccatflags]
-tst w0, 0x6
-beq invalid_area_loc_bit_settings
-
-/*Is Max Price lower min price?**/
-ldr d0, [invbin_ptr, maxprice]
-ldr d1, [invbin_ptr, minprice]
-fcmp d0, d1
-blt invalid_maxmin_price_msg_loc
-
-/*is Max Qty lower min qty?*/
-ldr d0, [invbin_ptr, maxqty]
-ldr d1, [invbin_ptr, minqty]
-fcmp d0, d1
-blt invalid_maxmin_qty_msg_loc
-
-/*Set 7 spaces in each field TODO on code optimization*/
+/*Set 7 spaces in each field*/
 movz x0, 0x0020, lsl 48 //ugh little endian
 movk x0, 0x2020, lsl 32
 movk x0, 0x2020, lsl 16
@@ -102,17 +70,11 @@ tbz w19, 2, force_set_blank_area
 /*Get Area width*/
 ldrb w20, [invbin_ptr, areawidth] /*Need width for later*/
 
-/*Is Area width in acceptable range?*/
-cmp w20, 7
-bhi invalid_area_width_msg_loc
-cmp w20, 0
-bls invalid_area_width_msg_loc
-
 /*Copy width*/
 mov w1, w20
 
 /*Based on width, copy Area's chars to append Area: */
-add x2, invbin_ptr, area
+add x2, masterptr, area
 adr x0, loc_msg-8
 ldrb w3, [x2], 1
 strb w3, [x0], 1
@@ -170,13 +132,13 @@ bl is_banned_area_loc
 cbnz w0, area_entry_idle_loop
 /*Write new area to inv.bin*/
 adr x0, loc_msg-8
-add x1, invbin_ptr, area
+add x1, masterptr, area
 ldrb w2, [x0], 1
 strb w2, [x1], 1
 subs w20, w20, 1
 bne -0xC
 
-//=================================
+/*--------------------------------------*/
 
 /*Is Location Enabled?*/
 __start_continue_inventory_loc:
@@ -185,17 +147,11 @@ tbz w19, 1, force_set_blank_loc
 /*Get Loc width*/
 ldrb w20, [invbin_ptr, locwidth] /*Need width for later*/
 
-/*Is Loc width in acceptable range?*/
-cmp w20, 7
-bhi invalid_loc_width_msg_loc
-cmp w20, 0
-bls invalid_loc_width_msg_loc
-
 /*Copy width*/
 mov w1, w20
 
 /*Based on width, copy Loc's chars to append Loc: */
-add x2, invbin_ptr, loc
+add x2, masterptr, loc
 adr x0, cat_msg-8
 ldrb w3, [x2], 1
 strb w3, [x0], 1
@@ -256,13 +212,13 @@ bl is_banned_area_loc
 cbnz w0, loc_entry_idle_loop
 /*Write new loc to inv.bin*/
 adr x0, cat_msg-8
-add x1, invbin_ptr, loc
+add x1, masterptr, loc
 ldrb w2, [x0], 1
 strb w2, [x1], 1
 subs w20, w20, 1
 bne -0xC
 
-//========================================
+/*--------------------------------------*/
 
 /*Is Category Enabled?*/
 __start_continue_inventory_cat:
@@ -271,17 +227,11 @@ tbz w19, 0, force_set_blank_cat
 /*Get Cat width*/
 ldrb w20, [invbin_ptr, catwidth] /*Need width for later*/
 
-/*Is Cat width in acceptable range?*/
-cmp w20, 7
-bhi invalid_cat_width_msg_loc
-cmp w20, 0
-bls invalid_cat_width_msg_loc
-
 /*Copy width*/
 mov w1, w20
 
 /*Based on width, copy Cat's chars to append Cat: then terminate with null*/
-add x2, invbin_ptr, cat
+add x2, masterptr, cat
 adr x0, end_of_cat_msg-8
 ldrb w3, [x2], 1
 strb w3, [x0], 1
@@ -320,7 +270,7 @@ b cat_entry_idle_loop
 go_to_area_loc_or_main_menu:
 tbnz w19, 1, __start_continue_inventory_loc
 tbnz w19, 2, __start_continue_inventory_area
-b continue_inventory_epilogue /*NOTE it's impossible to reach here, but just incase inventory.bin was manually edited outside of VAIS....*/
+b continue_inventory_epilogue /*NOTE it's impossible to reach here, but just incase inventory.bin was manually edited outside of VAIS and earlier inv.bin checks didn't catch it....*/
 
 cat_insert_char:
 adr x1, end_of_cat_msg-8
@@ -342,7 +292,7 @@ bl enter_field
 cbnz w0, cat_entry_idle_loop
 /*Write new cat to inv.bin*/
 adr x0, end_of_cat_msg-8
-add x1, invbin_ptr, cat
+add x1, masterptr, cat
 ldrb w2, [x0], 1
 strb w2, [x1], 1
 subs w20, w20, 1
@@ -351,8 +301,8 @@ bne -0xC
 /*DO LIVE INVENTORY!
 No Args
 w0 returns two possible values
-0 = go back to cat entry
-!0 = go to main menu*/
+0 - go back to cat entry
+!0 - go to main menu*/
 DO_LIVE_INVENTORY:
 bl live_inventory
 cbnz w0, continue_inventory_epilogue
@@ -363,60 +313,32 @@ b __start_continue_inventory_area
 
 /*Epilogue*/
 continue_inventory_epilogue:
-mov w0, 0 //tell main to NOT power off
+mov w0, 0 /*tell main to NOT power off*/
 epilogue 2, 0
 
 /*Force Set Area to to blank in inventory.bin*/
 force_set_blank_area:
-movz x0, 0x0020, lsl 48 //yay little endian...
+movz x0, 0x0020, lsl 48
 movk x0, 0x2020, lsl 32
 movk x0, 0x2020, lsl 16
 movk x0, 0x2020
-str x0, [invbin_ptr, area]
+str x0, [masterptr, area]
 b __start_continue_inventory_loc
 
 /*Force Set Loc to to blank in inventory.bin*/
 force_set_blank_loc:
-movz x0, 0x0020, lsl 48 //yay little endian...
+movz x0, 0x0020, lsl 48
 movk x0, 0x2020, lsl 32
 movk x0, 0x2020, lsl 16
 movk x0, 0x2020
-str x0, [invbin_ptr, loc]
+str x0, [masterptr, loc]
 b __start_continue_inventory_cat
 
 /*Force Set Cat to to blank in inventory.bin*/
 force_set_blank_cat:
-movz x0, 0x0020, lsl 48 //yay little endian...
+movz x0, 0x0020, lsl 48
 movk x0, 0x2020, lsl 32
 movk x0, 0x2020, lsl 16
 movk x0, 0x2020
-str x0, [invbin_ptr, cat]
+str x0, [masterptr, cat]
 b DO_LIVE_INVENTORY
-
-invalid_area_loc_bit_settings:
-adr x0, invalid_area_loc_flags_msg
-invalid_put_call:
-bl puts
-bl keyboard_input
-cbz w0, -4
-b continue_inventory_epilogue
-
-invalid_area_width_msg_loc:
-adr x0, invalid_area_width_msg_loc
-b invalid_put_call
-
-invalid_loc_width_msg_loc:
-adr x0, invalid_loc_width_msg_loc
-b invalid_put_call
-
-invalid_cat_width_msg_loc:
-adr x0, invalid_cat_width_msg_loc
-b invalid_put_call
-
-invalid_maxmin_price_msg_loc:
-adr x0, invalid_maxmin_price_msg
-b invalid_put_call
-
-invalid_maxmin_qty_msg_loc:
-adr x0, invalid_maxmin_qty_msg
-b invalid_put_call

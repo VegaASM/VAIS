@@ -1,9 +1,8 @@
 /*
-Args:
-Void
+Args: Void
 Return Values:
-w0 = 0; tell main to idle
-w0 = !0; tell main to power off VAIS*/
+w0 - 0; tell main to idle
+w0 - !0; tell main to power off VAIS*/
 
 start_new_inventory_msg:
 .asciz "\x1B[2J\x1B[HInventory Start Menu\n\n1. Start new Inventory\n8/ESC. Go back to Main Menu\n"
@@ -39,7 +38,7 @@ beq _do_start_new_inventory
 bl beep
 b start_new_inventory_idle_loop
 
-//=================================
+/*------------------------------------*/
 
 _do_start_new_inventory:
 adr x0, start_new_inventory_notice_msg
@@ -59,20 +58,20 @@ b _do_start_new_inventory_idle_loop
 adr x0, starting_new_inventory_wait_msg
 bl puts
 bl prep_synced_csv
-/*Reset area to all spaces, TODO should this be width based?*/
-movz x0, 0x0020, lsl 48 //i hate little endian
+/*Reset area, loc, cat to all spaces, TODO should this be width based?*/
+movz x0, 0x0020, lsl 48
 movk x0, 0x2020, lsl 32
 movk x0, 0x2020, lsl 16
 movk x0, 0x2020
-str x0, [invbin_ptr, area]
-str x0, [invbin_ptr, loc]
-str x0, [invbin_ptr, cat]
+str x0, [masterptr, area]
+str x0, [masterptr, loc]
+str x0, [masterptr, cat]
 /*Clear all live data*/
 mov recordnum, 0
 mov curdataentry_ptr, dataentry_ptr
 mov x0, dataentry_ptr
 mov x1, databin_max_entries
-str xzr, [x0], databin_entry_size //clears vflag, eflag, pflag, and qflag
+str xzr, [x0], databin_entry_size /*clears vflag, eflag, pflag, and qflag*/
 subs x1, x1, 1
 bne -0x8
 /*Set finalize flag LOW*/
@@ -83,5 +82,5 @@ bl continue_inventory
 
 /*Epilogue*/
 start_new_inventory_epilogue:
-mov w0, 0 //Signal to main to NOT power off
+mov w0, 0 /*Signal to main to NOT power off*/
 epilogue 0, 0

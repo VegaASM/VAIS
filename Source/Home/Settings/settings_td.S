@@ -12,7 +12,7 @@ prologue 0, 0
 
 settings_td_grab_td:
 ldrb w1, [invbin_ptr, tdvalue]
-cbz w1, 0xC
+tbz w1, 0, 0xC
 adr x0, settings_td_msg_on
 b 0x8
 adr x0, settings_td_msg_off

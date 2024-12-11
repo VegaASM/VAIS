@@ -7,7 +7,7 @@ sound_terminal_command:
 beep:
 /*Check if audio is enabled in Settings(inventory.bin)*/
 ldrb w0, [invbin_ptr, soundkeyflags]
-cbz w0, audio_disabled
+tbz w0, 0, audio_disabled
 /*Audio is indeed enabled*/
 prologue 0, 0
 adr x0, sound_terminal_command

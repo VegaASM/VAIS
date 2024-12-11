@@ -14,6 +14,7 @@
 #include "Terminal/restore_og_term.S"
 
 #include "Other/get_time_in_nsecs.S" /*needs to be before finalize_inventory*/
+#include "Other/verify_inventory_bin.S"
 
 #include "Home/FileHandling/dump_inventory_bin.S"
 #include "Home/FileHandling/prep_synced_csv.S" /*needs to be before any func/file that uses csv_header_size*/
@@ -29,7 +30,7 @@
 #include "Home/Char/remove_all_spaces.S"
 
 main_menu_msg: /*Hides the cursor for rest of time til program powers off*/
-.asciz "\x1B[2J\x1B[H\x1B[?25lWelcome to VAIS! (v0.4.2)\nCurrent Login: %s\n\n1. Start New Inventory\n2. Continue Inventory\n3. Finalize Inventory\n4. Settings\n5. Power Off\n"
+.asciz "\x1B[2J\x1B[H\x1B[?25lWelcome to VAIS! (v0.4.3)\nCurrent Login: %s\n\n1. Start New Inventory\n2. Continue Inventory\n3. Finalize Inventory\n4. Settings\n5. Power Off\n"
 poweroff_msg: /*Restores cursor*/
 .asciz "\x1B[2J\x1B[H\x1B[?25hVAIS has been powered off."
 
@@ -46,7 +47,7 @@ func_table:
 .globl main
 main:
 /*Prologue*/
-prologue 10, 0x150
+prologue 10, init_stack_size
 
 /*Set the master pointer*/
 add masterptr, sp, 0x10
@@ -64,12 +65,15 @@ str x0, [masterptr, finalizeflag]
 /*Change the terminal to semi-raw*/
 bl set_new_term_and_save_old
 
-/*Set terminal to reset at exit. Works but exits from a segementation fault*/
+/*Set terminal to reset at exit. Works but exits from a segmentation fault*/
 /*bl make_at_exit*/
 
 /*Dump inventory.bin into memory*/
 bl dump_inventory_bin
 cbnz x0, dump_invbin_error_occurred
+
+/*Verify inventory.bin's contents and fix if necessary*/
+bl verify_inventory_bin
 
 /*Get raw time and save it as serial num*/
 add x0, masterptr, serialnum
@@ -117,7 +121,7 @@ bl puts
 
 /*Main's epilogue, End the Program (exit (0))*/
 mov w0, 0
-epilogue 10, 0x150
+epilogue 10, init_stack_size
 
 /*Backup msg to print since an error occurred on inv.bin*/
 dump_invbin_error_occurred:

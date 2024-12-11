@@ -25,7 +25,7 @@ bl time
 mov x2, x0
 adr x1, csv_simpfile_name
 add x0, masterptr, csvfilename
-bl sprintf //no ec this.. lul
+bl sprintf
 add x0, masterptr, csvfilename
 mov w1, (O_WRONLY | O_DSYNC | O_CREAT | O_APPEND)
 mov w2, (S_IRWXU | S_IRWXG | S_IRWXO)

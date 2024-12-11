@@ -148,33 +148,33 @@ ldrb w11, [invbin_ptr, arealoccatflags]
 fsub d31, d31, d0
 /*Is Area enabled?*/
 tbz w11, 2, 0x18
-/*Does record area match current area in inv.bin? If so subtract shit*/
+/*Does record area match current area? If so subtract shit*/
 ldr x0, [curdataentry_ptr, d_area]
-ldr x1, [invbin_ptr, area]
+ldr x1, [masterptr, area]
 cmp x0, x1
-bne edit_mode_deleted_record_check
+bne edit_mode_call_del_csv_line
 fsub d30, d30, d0
 /*Is Loc enabled?*/
 tbz w11, 1, 0x18
-/*Does record for local loc match current loc in inv.bin? If so subtract shit*/
+/*Does record for local loc match current loc? If so subtract shit*/
 ldr x0, [curdataentry_ptr, d_loc]
-ldr x1, [invbin_ptr, loc]
+ldr x1, [masterptr, loc]
 cmp x0, x1
-bne edit_mode_deleted_record_check
+bne edit_mode_call_del_csv_line
 fsub d29, d29, d0
 /*Is Cat enabled?*/
 tbz w11, 0, 0x18
-/*Does record for local cat match current cat in inv.bin? If so subtract shit*/
+/*Does record for local cat match current cat in? If so subtract shit*/
 ldr x0, [curdataentry_ptr, d_cat]
-ldr x1, [invbin_ptr, cat]
+ldr x1, [masterptr, cat]
 cmp x0, x1
-bne edit_mode_deleted_record_check
+bne edit_mode_call_del_csv_line
 fsub d28, d28, d0
 /*Now actually delete the record from the CSV*/
+edit_mode_call_del_csv_line:
 mov x0, curdataentry_ptr
 bl delete_csv_line
 /*Was record deleted the one you were currently on (aka Upperbound ptr)?, if so move down record to next valid one*/
-edit_mode_deleted_record_check:
 cmp curdataentry_ptr, editmode_upperbound_ptr
 bne make_new_currdataentry_ptr /*Make edit mode re-display newest/latest record*/
 /*It is, so let's move down to closest below valid record, stop if we run out of records*/

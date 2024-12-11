@@ -1,5 +1,7 @@
 gc_change_area_please_wait_msg:
 .asciz "\x1B[2J\x1B[HPlease wait..."
+change_area_completed_msg:
+.asciz "\x1B[2J\x1B[HArea has been updated.\nPress any key to continue."
 
 .data
 gc_enter_area_msg:
@@ -8,21 +10,21 @@ gc_enter_area_end_msg:
 .text
 .align 6
 
-.globl gc_change_area
-gc_change_area:
+.globl change_area
+change_area:
 prologue 4, 0
 /*Grab width*/
 ldrb w21, [invbin_ptr, areawidth]
 gc_change_area_pre_idle_loop:
 adr x0, gc_enter_area_msg
-add x1, invbin_ptr, area
+add x1, masterptr, area
 bl printf
 gc_change_area_idle_loop:
 bl keyboard_input
 cbz w0, -4
 ldrb w0, [masterptr, keyboard_buffer]
 cmp w0, ESC
-beq gc_change_area_epi_task_incomplete
+beq gc_change_area_epi_nonzero
 cmp w0, ascii_enter
 beq gc_check_area_field
 cmp w0, ascii_plus
@@ -69,7 +71,7 @@ mov x20, entriesamt //loop counter
 /*cehck if valid entry, if not try next*/
 gc_change_area_loop:
 ldrb w0, [x19, d_vflag]
-ldr x2, [invbin_ptr, area] //get old area
+ldr x2, [masterptr, area] //get old area
 cbz w0, gc_change_area_incr_addr
 /*Valid entry found, is area matched with inv.bin?*/
 ldr x0, [x19, d_area]
@@ -86,7 +88,7 @@ subs x20, x20, 1
 bne gc_change_area_loop
 /*if and only if new area matches area in question, Write new area to inv.bin*/
 adr x0, gc_enter_area_end_msg-9
-add x1, invbin_ptr, area
+add x1, masterptr, area
 ldrb w2, [x0], 1
 strb w2, [x1], 1
 subs w21, w21, 1
@@ -98,10 +100,17 @@ movz w1, 0x2020
 str w1, [x0]
 strh w1, [x0, 4]
 strb w1, [x0, 6]*/
+
+/*Done!*/
+adr x0, change_area_completed_msg
+bl puts
+bl keyboard_input
+cbz w0, -4
 mov w0, 0
+
 gc_change_area_epi:
 epilogue 4, 0
 
-gc_change_area_epi_task_incomplete:
+gc_change_area_epi_nonzero:
 mov w0, -1
 b gc_change_area_epi

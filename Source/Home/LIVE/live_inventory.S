@@ -57,10 +57,10 @@ movi d28, 0
 mov x8, entriesamt
 mov x4, dataentry_ptr
 
-/*place inv.bin area loc and cat in x5, x6, and x7*/
-ldr x5, [invbin_ptr, area]
-ldr x6, [invbin_ptr, loc]
-ldr x7, [invbin_ptr, cat]
+/*place current area,loc,cat in x5, x6, and x7*/
+ldr x5, [masterptr, area]
+ldr x6, [masterptr, loc]
+ldr x7, [masterptr, cat]
 
 /*First check if entry is valid*/
 total_everything_loop:
@@ -114,9 +114,9 @@ fmov d2, d29
 fmov d3, d28
 
 /*Place Area, loc, cat char ptrs in x1 thru x3*/
-add x1, invbin_ptr, area
-add x2, invbin_ptr, loc
-add x3, invbin_ptr, cat
+add x1, masterptr, area
+add x2, masterptr, loc
+add x3, masterptr, cat
 
 /*Print the whole field*/
 adr x0, live_info_start_field
@@ -201,13 +201,13 @@ adr x0, qty_cursor_start_spot-12
 bl twindigits
 tbnz w0, 1, live_call_qty_limit_check
 cbz w0, 0xC
-mov w21, 1 //Set exit prompt flag to skip reprint
+mov w21, 1 /*Set exit prompt flag to skip reprint*/
 b update_float_args
 movz x0, 0x2020, lsl 48
 movk x0, 0x2020, lsl 32
 movk x0, 0x2020, lsl 16
 movk x0, 0x2020
-str x0, [x19, -12] //Clear out qty field
+str x0, [x19, -12] /*Clear out qty field*/
 str w0, [x19, -4]
 strb w0, [x19]
 b update_float_args

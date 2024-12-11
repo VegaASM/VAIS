@@ -12,7 +12,7 @@ prologue 0, 0
 
 settings_audio_grab_audio:
 ldrb w1, [invbin_ptr, soundkeyflags]
-cbz w1, 0xC
+tbz w1, 0, 0xC
 adr x0, settings_audio_msg_on
 b 0x8
 adr x0, settings_audio_msg_off

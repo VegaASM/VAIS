@@ -52,7 +52,7 @@ This will move all csv files to the Phone's Download folder. At this point the A
 
 **Help! The auditor experienced a program crash while Finalizing data, and the CSV file isn't present in Termux!**
 
-If this has occurred, it means VAIS ran into a program exception while deleted entries were being removed. Do NOT worry! There will be a new file present in Termux named as xxxxxxxxxxxxxxxx where the x's appear to be random numbers. The file will have no extension/type. This is a temp file. Get the temp file out of the phone and onto your work computer. Rename the temp file to anything.csv. After renaming, open this temp CSV using Microsoft Excel or Access. You will have to manually delete all the entries marked as "DELETE!". Afterwards the CSV is now finalized.
+If this has occurred, it means VAIS ran into a program exception while deleted entries were being removed. Do NOT worry! There will be a new file present in Termux named as 00000000xxxxxxxx where the x's appear to be random numbers. The file will have no extension/type. This is a temp file. Get the temp file out of the phone and onto your work computer. Rename the temp file to anything.csv. After renaming, open this temp CSV using Microsoft Excel or Access. You will have to manually delete all the entries marked as "DELETE!". Afterwards the CSV is now finalized.
 
 ---
 

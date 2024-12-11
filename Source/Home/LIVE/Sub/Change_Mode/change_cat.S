@@ -1,5 +1,7 @@
 gc_change_cat_please_wait_msg:
 .asciz "\x1B[2J\x1B[HPlease wait..."
+change_cat_completed_msg:
+.asciz "\x1B[2J\x1B[HCat has been updated.\nPress any key to continue."
 
 .data
 gc_enter_cat_msg:
@@ -8,21 +10,21 @@ gc_enter_cat_end_msg:
 .text
 .align 6
 
-.globl gc_change_cat
-gc_change_cat:
+.globl change_cat
+change_cat:
 prologue 4, 0
 /*Grab width*/
 ldrb w21, [invbin_ptr, catwidth]
 gc_change_cat_pre_idle_loop:
 adr x0, gc_enter_cat_msg
-add x1, invbin_ptr, cat
+add x1, masterptr, cat
 bl printf
 gc_change_cat_idle_loop:
 bl keyboard_input
 cbz w0, -4
 ldrb w0, [masterptr, keyboard_buffer]
 cmp w0, ESC
-beq gc_change_cat_epi_task_incomplete
+beq gc_change_cat_epi_nonzero
 cmp w0, ascii_enter
 beq gc_check_cat_field
 cmp w0, ascii_plus
@@ -69,9 +71,9 @@ mov x20, entriesamt //loop counter
 /*cehck if valid entry, if not try next*/
 gc_change_cat_loop:
 ldrb w0, [x19, d_vflag]
-ldr x2, [invbin_ptr, area] //get old area
-ldr x5, [invbin_ptr, loc] //get old loc
-ldr x6, [invbin_ptr, cat] //get old cat
+ldr x2, [masterptr, area] //get old area
+ldr x5, [masterptr, loc] //get old loc
+ldr x6, [masterptr, cat] //get old cat
 cbz w0, gc_change_cat_incr_addr
 /*Valid entry found, is area matched with inv.bin?*/
 ldr x0, [x19, d_area]
@@ -96,7 +98,7 @@ subs x20, x20, 1
 bne gc_change_cat_loop
 /*if and only if new cat matches cat in question, Write new cat to inv.bin*/
 adr x0, gc_enter_cat_end_msg-9
-add x1, invbin_ptr, cat
+add x1, masterptr, cat
 ldrb w2, [x0], 1
 strb w2, [x1], 1
 subs w21, w21, 1
@@ -108,10 +110,17 @@ movz w1, 0x2020
 str w1, [x0]
 strh w1, [x0, 4]
 strb w1, [x0, 6]*/
+
+/*Done!*/
+adr x0, change_cat_completed_msg
+bl puts
+bl keyboard_input
+cbz w0, -4
 mov w0, 0
+
 gc_change_cat_epi:
 epilogue 4, 0
 
-gc_change_cat_epi_task_incomplete:
+gc_change_cat_epi_nonzero:
 mov w0, -1
 b gc_change_cat_epi

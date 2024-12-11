@@ -17,7 +17,7 @@ td_msg:
 twindigits:
 /*Check if td checker is enabled in settings*/
 ldrb w1, [invbin_ptr, tdvalue]
-cbnz w1, td_yes_enabled
+tbnz w1, 0, td_yes_enabled
 mov w0, 2
 ret
 

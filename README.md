@@ -2,7 +2,7 @@
 
 Author: Vega
 
-Version: v0.4.2
+Version: v0.4.3
 
 This document is an overview of VAIS and of other documents present in this directory.
 
@@ -20,7 +20,7 @@ I use to work for an inventory company. This company contracted a Developer to c
 
 ---
 
-**Why write this in ARM64 Assembly??**
+**Why write this in ARM64 Assembly?**
 
 Since almost all modern Android phones run on ARM64, and most Inventory Software is meant to run on a cell phone, this was a perfect project to write in ARM64.
 
@@ -50,8 +50,9 @@ For now, only plain jane financial inventories (manually enter price then manual
 * Data itself can NEVER be lost
 * Inventories can be started very quickly.
 * Area, Location, & Cat combination & width settings
-* Change mode allows for basic Area/Loc/Cat fixes (changes are basically instant)
-* Files used are standard CSV's (any third party software on the planet can read these)
+* Change Mode allows for basic Area/Loc/Cat fixes (changes are basically instant)
+* Edit Mode allows to edit or delete past entries.
+* Files used are standard CSV's
 * Audio on/off settings
 * Max/min price and quantity settings
 * Supervisor Mode to restrict auditors from accessing certain Settings
@@ -69,7 +70,7 @@ For now, only plain jane financial inventories (manually enter price then manual
 
 Current limitations/cons:
 * Financial Counts only
-* Edit Mode is bare-bones (DC5 style)
+* Edit Mode is bare-bones
 * Data cannot be transmitted over the internet during an inventory
 * Since there is no live-internet-connection, there's no warnings about being in somebody else's Location
 
@@ -87,7 +88,7 @@ The only way to lose data, is for the auditor to literally lose or destroy the p
 
 Once an auditor has finished counting, they will select the Finalize Inventory option at the Main Menu. Then press 7 to finalize to a Generic CSV. This will "strip" the CSV file (remove CSV entries marked as "DELETE!"). Once the auditor has completed this option, they can then power off VAIS. The final CSV file is now residing in the Termux directory, and the auditor will then move the CSV file out of the Termux directory and into the Phone's Download folder.
 
-At this point, you now have regular phone access to the CSV file. The auditor can give it to your Supervisor via Teams, Discord, Skype, etc. Or you can plug the Phone into the Supervisor's Computer, and do simple drag and drop.
+At this point, you now have regular phone access to the CSV file. The auditor can give it to your Supervisor via Teams, Discord, Skype, etc. Or you can plug the Phone into the Supervisor's Computer, and do simple drag and drop. The CSV has the title name of "inv" then the Unix Time Stamp of when the Inventory was started.
 
 Keep in mind that the "Finalize" option is not needed when push comes to shove, but it does make things convenient. A supervisor/lead can open up an "unfinished" CSV and easily configure a option/parameter on Excel or Access to remove all the "DELETE!" CSV entries.
 
@@ -99,8 +100,8 @@ More information regarding Termux is in the TERMUX.md doc. More information spec
 
 Read the PREP.md doc.
 
-**Where is the source code and how do I compile it?**
+**How do I compile the Source?**
 
-The Source is located in the Source directory. Instructions to compile it for Android is in the ANDROID.md doc. Instructions to compile it for Linux-ARM64-QEMU (debugging purposes using QEMU and GDB) is in the QEMU.md doc.
+Instructions to compile it for Android is in the ANDROID.md doc. Instructions to compile it for Linux-ARM64-QEMU (debugging purposes using QEMU and GDB) is in the QEMU.md doc.
 
 ---

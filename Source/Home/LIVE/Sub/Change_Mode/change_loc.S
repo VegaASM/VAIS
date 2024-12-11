@@ -1,5 +1,7 @@
 gc_change_loc_please_wait_msg:
 .asciz "\x1B[2J\x1B[HPlease wait..."
+change_loc_completed_msg:
+.asciz "\x1B[2J\x1B[HLocation has been updated.\nPress any key to continue."
 
 .data
 gc_enter_loc_msg:
@@ -8,21 +10,21 @@ gc_enter_loc_end_msg:
 .text
 .align 6
 
-.globl gc_change_loc
-gc_change_loc:
+.globl change_loc
+change_loc:
 prologue 4, 0
 /*Grab width*/
 ldrb w21, [invbin_ptr, locwidth]
 gc_change_loc_pre_idle_loop:
 adr x0, gc_enter_loc_msg
-add x1, invbin_ptr, loc
+add x1, masterptr, loc
 bl printf
 gc_change_loc_idle_loop:
 bl keyboard_input
 cbz w0, -4
 ldrb w0, [masterptr, keyboard_buffer]
 cmp w0, ESC
-beq gc_change_loc_epi_task_incomplete
+beq gc_change_loc_epi_nonzero
 cmp w0, ascii_enter
 beq gc_check_loc_field
 cmp w0, ascii_plus
@@ -69,8 +71,8 @@ mov x20, entriesamt //loop counter
 /*cehck if valid entry, if not try next*/
 gc_change_loc_loop:
 ldrb w0, [x19, d_vflag]
-ldr x2, [invbin_ptr, area] //get old area
-ldr x5, [invbin_ptr, loc] //get old loc
+ldr x2, [masterptr, area] //get old area
+ldr x5, [masterptr, loc] //get old loc
 cbz w0, gc_change_loc_incr_addr
 /*Valid entry found, is area matched with inv.bin?*/
 ldr x0, [x19, d_area]
@@ -91,7 +93,7 @@ subs x20, x20, 1
 bne gc_change_loc_loop
 /*if and only if new loc matches loc in question, Write new loc to inv.bin*/
 adr x0, gc_enter_loc_end_msg-9
-add x1, invbin_ptr, loc
+add x1, masterptr, loc
 ldrb w2, [x0], 1
 strb w2, [x1], 1
 subs w21, w21, 1
@@ -103,10 +105,17 @@ movz w1, 0x2020
 str w1, [x0]
 strh w1, [x0, 4]
 strb w1, [x0, 6]*/
+
+/*Done!*/
+adr x0, change_loc_completed_msg
+bl puts
+bl keyboard_input
+cbz w0, -4
 mov w0, 0
+
 gc_change_loc_epi:
 epilogue 4, 0
 
-gc_change_loc_epi_task_incomplete:
+gc_change_loc_epi_nonzero:
 mov w0, -1
 b gc_change_loc_epi

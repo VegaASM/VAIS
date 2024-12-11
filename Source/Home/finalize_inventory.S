@@ -165,16 +165,13 @@ strb w0, [masterptr, fdstorespot]
 /*Now we need to be in a loop and look for any DELETED!, shit*/
 size_unfinalized_csv .req x19
 start_csv_static_ptr .req x20
-oob_csv_ptr .req x21
-curr_new_csv_ptr .req x22
+csv_load_ptr .req x21
+csv_write_ptr .req x22
 delete_entry_mask .req x23
-memcpy_3rd_arg .req x24
 
-/*Create oob ptr (EoF+1)*/
-add oob_csv_ptr, start_csv_static_ptr, size_unfinalized_csv
-
-/*Create an updating/current ptr for finalized csv, it must start at byte AFTER CSV Header*/
-add curr_new_csv_ptr, start_csv_static_ptr, csv_header_size
+/*Create a load and write ptr for the CSV, DON'T include Header*/
+add csv_load_ptr, start_csv_static_ptr, csv_header_size
+add csv_write_ptr, start_csv_static_ptr, csv_header_size
 
 /*Set "!DELETE," in a non-vol register*/
 movz delete_entry_mask, 0x2C21, lsl 48
@@ -182,35 +179,38 @@ movk delete_entry_mask, 0x4554, lsl 32
 movk delete_entry_mask, 0x454C, lsl 16
 movk delete_entry_mask, 0x4544
 
-/*Start the memcpy 3rd arg for the upcoming loop*/
-sub memcpy_3rd_arg, size_unfinalized_csv, csv_header_size
-
+/*Fyi we are using GLOBAL recordnum (linear record count) register for this loop count, its volatile(safe) to use now*/
+/*NOTE this is unsafe if VAIS ever becomes non-linear*/
 remove_stale_deleted_entries_loop:
-/*Stop loop once we reach to first entry that doesn't exist (regardless of deleted vs not)*/
-cmp curr_new_csv_ptr, oob_csv_ptr
-bhs fi_calc_new_csv_size
-/*Always update memcpy 3rd arg, and then if deleted entry not found, keep searching*/
-ldr x0, [curr_new_csv_ptr], csv_entry_size
+/*Check if entry is marked as DELETE!*/
+ldr x0, [csv_load_ptr]
 cmp x0, delete_entry_mask
-sub memcpy_3rd_arg, memcpy_3rd_arg, csv_entry_size /*No matter what we need to do this*/
+bne DELETE_not_found
+
+/*!DELETE'd entry found, adjust the load ptr but NOT the write ptr*/
+add csv_load_ptr, csv_load_ptr, csv_entry_size
+
+/*Decrement loop*/
+decrement_remove_stale_deleted_entries_loop:
+subs recordnum, recordnum, 1
 bne remove_stale_deleted_entries_loop
-/*DELETE! found, wipe it from malloc'd buffer using memcpy*/
-/*But if we get a memcpy 3rd arg of zero here, then we simply just need to decrement the oob ptr ONLY,
-yes we could legally call memcpy 3rd arg of zero, but its not "proper" to do so*/
-cbz memcpy_3rd_arg, post_memcpy
-sub x0, curr_new_csv_ptr, csv_entry_size //Dest
-mov x1, curr_new_csv_ptr //Src
-mov x2, memcpy_3rd_arg
-bl memcpy
-post_memcpy:
-/*Need to readjust oob ptr since csv size is now smaller*/
-sub oob_csv_ptr, oob_csv_ptr, csv_entry_size
-/*Go back to loop*/
-b remove_stale_deleted_entries_loop
+
+/*Get out of Loop*/
+b fi_calc_new_csv_size
+
+/*Regular entry found, transfer entry using load to write ptr*/
+DELETE_not_found:
+mov w0, csv_entry_size
+inner_DELETE_not_found_loop:
+ldrb w1, [csv_load_ptr], 1
+strb w1, [csv_write_ptr], 1
+subs w0, w0, 1
+bne inner_DELETE_not_found_loop
+b decrement_remove_stale_deleted_entries_loop
 
 /*Calc new file size*/
 fi_calc_new_csv_size:
-sub x19, oob_csv_ptr, start_csv_static_ptr
+sub x19, csv_write_ptr, start_csv_static_ptr
 
 /*Write new file*/
 ldrb w0, [masterptr, fdstorespot]

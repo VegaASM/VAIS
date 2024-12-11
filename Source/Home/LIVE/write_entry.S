@@ -34,11 +34,11 @@ cbz w0, proceed_to_write_entry
 add curdataentry_ptr, curdataentry_ptr, databin_entry_size
 b check_room_for_new_entries
 /*Write the entry!*/
-/*Transfer area loc and cat from inv.bin to data.bin only if we are calling this from LIVE*/
+/*Transfer area loc and cat from masterptr stack buffer to raw data entry only if we are calling this from LIVE*/
 proceed_to_write_entry:
-ldr x1, [invbin_ptr, area]
-ldr x2, [invbin_ptr, loc]
-ldr x3, [invbin_ptr, cat]
+ldr x1, [masterptr, area]
+ldr x2, [masterptr, loc]
+ldr x3, [masterptr, cat]
 str x1, [curdataentry_ptr, d_area]
 str x2, [curdataentry_ptr, d_loc]
 str x3, [curdataentry_ptr, d_cat]

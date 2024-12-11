@@ -13,7 +13,10 @@ recordnum .req x24 /*Current entry number; first record uses value 1; includes i
 .set TCSANOW, 0 /*For tcsetattr func*/
 
 /*Master ptr's offsets*/
-.set serialnum, 0
+.set area, 0
+.set loc, area + 0x8
+.set cat, loc + 0x8
+.set serialnum, cat + 0x8
 .set finalizeflag, serialnum + 0x8
 .set in_editmode_flag, finalizeflag + 0x8 /*Hacky whatever, lets write_entry func know whenever we are in edit mode*/
 .set enddataentry_ptr, in_editmode_flag + 0x8 /*No entry can have a ptr higher than this*/
@@ -23,22 +26,22 @@ recordnum .req x24 /*Current entry number; first record uses value 1; includes i
 .set fdstorespot, keyboard_buffer + 0x10
 .set csvfilename, fdstorespot + 0x8
 
-/*Inventory.bin structure, this region of memory contains some current attributes for live inventory and contains various settings*/
+/*Inventory.bin structure, basically this is a Settings file*/
 .set login, 0 /*chars*/
 .set maxprice, 0x8 /*double float*/
 .set minprice, 0x10 /*double float*/
 .set maxqty, 0x18 /*double float*/
 .set minqty, 0x20 /*double float*/
 .set arealoccatflags, 0x28 /*bit 2 area, bit 1 loc, bit 0 cat*/
-.set areawidth, 0x29 /*unsigned int*/
-.set locwidth, 0x2A /*unsigned int*/
-.set catwidth, 0x2B /*unsigned int*/
-.set area, 0x30 /*chars*/
-.set loc, 0x38 /*chars*/
-.set cat, 0x40 /*chars*/
-.set soundkeyflags, 0x48 /*byte; 0x00 = no sound, 0x01 = sound*/
-.set tdvalue, 0x49 /*byte; 00 = don't check td's, 01 = check td's*/
-.set perms, 0x4A /*halfword, see settings_supervisor.S for bit details*/
+.set areawidth, 0x29 /*unsigned int8*/
+.set locwidth, 0x2A /*unsigned int8*/
+.set catwidth, 0x2B /*unsigned int8*/
+.set soundkeyflags, 0x2C /*byte; 0x00 = no sound, 0x01 = sound*/
+.set tdvalue, 0x2D /*byte; 00 = don't check td's, 01 = check td's*/
+.set perms, 0x2E /*halfword, see settings_supervisor.S for bit details*/
+
+/*Total inventory.bin size*/
+.set invbin_size, (perms + 2)
 
 /*Inventory.bin perm masks*/
 .set perms_supervisor, 0x0001 /*unused*/
@@ -65,9 +68,6 @@ recordnum .req x24 /*Current entry number; first record uses value 1; includes i
 .set permsB_tds, 7
 .set permsB_audio, 8
 .set permsB_moreinfo, 9 /*unused*/
-
-/*Total inventory.bin size*/
-.set invbin_size, (perms + 2)
 
 /*Raw data entry Offsets*/
 .set d_vflag, 0 /*0x00 = invalid, 0x01 = valid*/
@@ -103,7 +103,13 @@ recordnum .req x24 /*Current entry number; first record uses value 1; includes i
 .set stdout, 1
 .set stderr, 2
 
-.set init_stack_size, csvfilename + 0x38 + 0xA0
+.set xreg_size, 8
+.set all_nonvol_regs, 12 /*x19 thr x28, fp, lr*/
+.set xreg_buffer_amt, xreg_size * all_nonvol_regs
+
+.set csvfilename_buffer_amt, 24 /*inv (3 chars) + 20 decimal ascii chars + 1 null byte ender*/
+
+.set init_stack_size, csvfilename + csvfilename_buffer_amt + xreg_buffer_amt + 8 /*So its 16 byte aligned*/
 .set align_init_stack_size, init_stack_size & 0xF
 .if (align_init_stack_size != 0)
         .error "Error! Initial/Main Stack Buffer size is not 16-byte aligned!"
